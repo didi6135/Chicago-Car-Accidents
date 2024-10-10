@@ -1,23 +1,17 @@
-import os
-
-from flask import Flask, jsonify, request
-
+from flask import Flask
 from controller.accidents_controller import accidents_controller
-# from controller.accidents_controller import accidents_controller
-from service.csv_service import load_accident_data_service
+from controller.initialize_database import initialize_database
+from controller.statistics_controller import injury_statistics_controller
+
+
 
 app = Flask(__name__)
 
 app.register_blueprint(blueprint=accidents_controller, url_prefix='/api')
+app.register_blueprint(blueprint=injury_statistics_controller, url_prefix='/api')
+app.register_blueprint(blueprint=initialize_database, url_prefix='/api')
 
 
-@app.route('/initialize_db', methods=['POST'])
-def initialize_db():
-    try:
-        load_accident_data_service('data/data.csv')
-        return jsonify({"message": "Database initialized successfully."})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     # insert_aggregated_data()

@@ -2,19 +2,26 @@ from bson import ObjectId
 from flask import Blueprint, jsonify, request
 from repository.accident_repository import (
     get_accidents_by_week,
-    get_accidents_by_month, get_accidents_by_day, get_accidents_grouped_by_cause
+    get_accidents_by_month, get_accidents_by_day, get_accidents_grouped_by_cause, get_accidents_by_area
 )
+from service.accident_service import convert_object_id
 
-accidents_controller = Blueprint('accidents_controller', __name__)
+accidents_controller = Blueprint('accidents', __name__)
 
 
-def convert_object_id(data):
-    if isinstance(data, list):
-        return [convert_object_id(item) for item in data]
-    elif isinstance(data, dict):
-        return {key: (str(value) if isinstance(value, ObjectId) else value) for key, value in data.items()}
+@accidents_controller.route('/accidents_by_area', methods=['GET'])
+def accidents_by_area():
+    area = request.args.get('area')
+
+    if not area:
+        return jsonify({"error": "Area and day are required"}), 400
+
+    data = get_accidents_by_area(area)
+    if data:
+        data = convert_object_id(data)
+        return jsonify(data)
     else:
-        return data
+        return jsonify({"message": "No data found for the given area and day"}), 404
 
 
 # Endpoint for accidents by day
@@ -29,7 +36,7 @@ def accidents_by_day():
     data = get_accidents_by_day(area, day)
 
     if data:
-        data = convert_object_id(data)  # Convert ObjectId to string
+        data = convert_object_id(data)
         return jsonify(data)
     else:
         return jsonify({"message": "No data found for the given area and day"}), 404
@@ -70,6 +77,7 @@ def accidents_by_month():
         return jsonify(data)
     else:
         return jsonify({"message": "No data found for the given area and month"}), 404
+
 
 
 @accidents_controller.route('/accidents_by_cause', methods=['GET'])

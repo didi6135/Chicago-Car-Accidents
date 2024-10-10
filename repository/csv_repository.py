@@ -170,7 +170,7 @@ from database.connect import (
     get_accidents_by_week_collection,
     get_accidents_by_month_collection,
     get_accidents_by_cause_collection,
-    get_injury_statistics_by_area_collection
+    get_injury_statistics_by_area_collection, get_accidents_by_area_collection
 )
 
 
@@ -297,11 +297,114 @@ def insert_accidents_by_month(data_by_month):
         })
 
 
-# Run all aggregation functions
+# Data aggregation by cause (primary cause)
+def aggregate_by_cause(csv_file_path):
+    data_by_cause = defaultdict(lambda: defaultdict(int))
+
+    for row in read_csv(csv_file_path):
+        area = row.get('BEAT_OF_OCCURRENCE', 'Unknown')
+        primary_cause = row.get('PRIM_CONTRIBUTORY_CAUSE', 'Unknown')
+
+        # Count accidents by cause in each area
+        data_by_cause[area][primary_cause] += 1
+
+    return data_by_cause
+
+
+# Insert data into accidents_by_cause collection
+def insert_accidents_by_cause(data_by_cause):
+    collection = get_accidents_by_cause_collection()
+    for area, causes in data_by_cause.items():
+        collection.insert_one({
+            "area": area,
+            "causes": dict(causes)
+        })
+
+
+# Data aggregation for injury statistics by area
+def aggregate_injury_statistics(csv_file_path):
+    injury_stats = defaultdict(lambda: {
+        "total_injuries": 0,
+        "fatal_injuries": 0,
+        "non_fatal_injuries": 0,
+        "events": []
+    })
+
+    for row in read_csv(csv_file_path):
+        area = row.get('BEAT_OF_OCCURRENCE', 'Unknown')
+        injuries_total = safe_int(row.get('INJURIES_TOTAL', 0))
+        injuries_fatal = safe_int(row.get('INJURIES_FATAL', 0))
+        non_fatal = safe_int(row.get('INJURIES_NON_INCAPACITATING', 0))
+
+        # Aggregate injury statistics for the area
+        injury_stats[area]['total_injuries'] += injuries_total
+        injury_stats[area]['fatal_injuries'] += injuries_fatal
+        injury_stats[area]['non_fatal_injuries'] += non_fatal
+
+        # Store event details
+        injury_stats[area]['events'].append({
+            'crash_date': row['CRASH_DATE'],
+            'injuries_total': injuries_total,
+            'injuries_fatal': injuries_fatal,
+            'injuries_non_fatal': non_fatal
+        })
+
+    return injury_stats
+
+
+# Insert aggregated injury statistics into the collection
+def insert_injury_statistics(data_by_area):
+    collection = get_injury_statistics_by_area_collection()
+    for area, stats in data_by_area.items():
+        collection.insert_one({
+            "area": area,
+            "total_injuries": stats["total_injuries"],
+            "fatal_injuries": stats["fatal_injuries"],
+            "non_fatal_injuries": stats["non_fatal_injuries"],
+            "events": stats["events"]
+        })
+
+
+# Data aggregation by total accidents in each area
+def aggregate_total_accidents_by_area(csv_file_path):
+    data_by_area = defaultdict(int)
+
+    for row in read_csv(csv_file_path):
+        area = row.get('BEAT_OF_OCCURRENCE', 'Unknown')
+        data_by_area[area] += 1
+
+    return data_by_area
+
+# Insert total accidents by area into the collection
+def insert_total_accidents_by_area(data_by_area):
+    collection = get_accidents_by_area_collection()
+    for area, total_accidents in data_by_area.items():
+        collection.insert_one({
+            "area": area,
+            "total_accidents": total_accidents
+        })
+
+
+# Run all aggregation functions and initialize the database
 def initialize_database(csv_file_path):
+    # Aggregate data by day, week, month
     data_by_day, data_by_week, data_by_month = aggregate_by_day_week_month(csv_file_path)
     insert_accidents_by_day(data_by_day)
     insert_accidents_by_week(data_by_week)
     insert_accidents_by_month(data_by_month)
 
+    # Aggregate accidents by cause
+    data_by_cause = aggregate_by_cause(csv_file_path)
+    insert_accidents_by_cause(data_by_cause)
+
+    # Aggregate injury statistics
+    injury_statistics = aggregate_injury_statistics(csv_file_path)
+    insert_injury_statistics(injury_statistics)
+
+    # Aggregate total accidents by area
+    total_accidents_by_area = aggregate_total_accidents_by_area(csv_file_path)
+    insert_total_accidents_by_area(total_accidents_by_area)
+
     print("Database initialization complete with aggregated data.")
+
+

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from database.connect import (
     get_accidents_by_day_collection,
     get_accidents_by_week_collection,
-    get_accidents_by_month_collection, get_accidents_by_cause_collection
+    get_accidents_by_month_collection, get_accidents_by_cause_collection, get_accidents_by_area_collection
 )
 
 # Get accidents by day from the 'accidents_by_day' collection
@@ -49,3 +49,8 @@ def get_accidents_grouped_by_cause(area):
 
     result = list(collection.aggregate(pipeline))
     return result
+
+
+def get_accidents_by_area(area):
+    collection = get_accidents_by_area_collection()
+    return list(collection.find({'area': area}))
