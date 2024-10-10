@@ -1,16 +1,29 @@
-# This is a sample Python script.
+import os
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from flask import Flask, jsonify, request
+
+from controller.accidents_controller import accidents_controller
+from service.accident_service import load_accident_data_service
+
+app = Flask(__name__)
+
+app.register_blueprint(blueprint=accidents_controller, url_prefix='/api')
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+@app.route('/initialize_db', methods=['POST'])
+def initialize_db():
+    # csv_file_path = request.json.get('csv_file_path')
 
+    # if not csv_file_path:
+    #     return jsonify({"error": "CSV file path not provided"}), 400
 
-# Press the green button in the gutter to run the script.
+    try:
+        load_accident_data_service('data/data.csv')
+        return jsonify({"message": "Database initialized successfully."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    # insert_aggregated_data()
+    # load_accident_data_service()
+    app.run(debug=True)
