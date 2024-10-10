@@ -1,4 +1,6 @@
 import os
+import time
+
 from pymongo import ASCENDING
 
 from database.connect import get_accidents_by_area_collection, get_injury_statistics_by_area_collection, \
@@ -90,11 +92,13 @@ def insert_total_accidents_by_area(data_by_area):
 
 # Run all aggregation functions and initialize the database with indexing
 def initialize_database():
+    start_time = time.time()
     # Get the current directory of the script
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Build the full path to the CSV file
     csv_file_path = os.path.join(current_dir, '../data/data.csv')
+    # csv_file_path = os.path.join(current_dir, '../data/Traffic_Crashes_Crashes.csv')
 
     # Aggregate data by day, week, month
     data_by_day, data_by_week, data_by_month = aggregate_by_day_week_month(csv_file_path)
@@ -113,5 +117,6 @@ def initialize_database():
     # Aggregate total accidents by area
     total_accidents_by_area = aggregate_total_accidents_by_area(csv_file_path)
     insert_total_accidents_by_area(total_accidents_by_area)
+    time_no_index = time.time() - start_time
 
     print("Database initialization complete with aggregated data and indexing.")

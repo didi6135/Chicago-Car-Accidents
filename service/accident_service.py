@@ -1,5 +1,5 @@
-import json
-
+import time
+from pymongo import ASCENDING
 from bson import ObjectId, json_util
 
 
@@ -12,8 +12,3 @@ def convert_object_id(data):
         return data
 
 
-
-
-
-def parse_json(data):
-    return json.loads(json_util.dumps(data))

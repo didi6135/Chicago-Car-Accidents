@@ -2,9 +2,12 @@ from flask import Blueprint, jsonify, request
 from repository.accident_repository import (
     get_accidents_by_week,
     get_accidents_by_month, get_accidents_by_day, get_accidents_grouped_by_cause, get_accidents_by_area)
-from service.accident_service import convert_object_id, parse_json
+from service.accident_service import convert_object_id
 
 accidents_controller = Blueprint('accidents', __name__)
+
+
+
 
 @accidents_controller.route('/accidents_by_area', methods=['GET'])
 def accidents_by_area():
