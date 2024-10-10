@@ -1,4 +1,6 @@
-from bson import ObjectId
+import json
+
+from bson import ObjectId, json_util
 
 
 def convert_object_id(data):
@@ -8,3 +10,10 @@ def convert_object_id(data):
         return {key: (str(value) if isinstance(value, ObjectId) else value) for key, value in data.items()}
     else:
         return data
+
+
+
+
+
+def parse_json(data):
+    return json.loads(json_util.dumps(data))

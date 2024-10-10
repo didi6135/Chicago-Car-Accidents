@@ -1,5 +1,3 @@
-import pytest
-
 from repository.statistics_repository import get_injury_statistics_by_area
 
 

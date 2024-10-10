@@ -1,4 +1,3 @@
-import pytest
 from pymongo.collection import Collection
 
 from repository.accident_repository import get_accidents_by_day, get_accidents_by_week, get_accidents_by_month, \
