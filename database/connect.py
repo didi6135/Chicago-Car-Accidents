@@ -10,7 +10,7 @@ def get_mongo_client():
 
 def get_db():
     client = get_mongo_client()
-    return client['chicago_car_accidents_t']
+    return client['chicago_car_accidents']
 
 # Functions to access different collections
 def get_accidents_by_area_collection(collection_name='accidents_by_area'):
